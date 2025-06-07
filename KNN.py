@@ -38,7 +38,7 @@ class KNN:
 def load_data(file_path,max_features=64,max_instances = 2048):
     data = np.loadtxt(file_path,dtype=np.float64,ndmin=2,max_rows=max_instances)
 
-    y = data[:, 0]
+    y = data[:, 0].astype(np.int64)
     X = data[:, 1:1+max_features]
 
     return X, y
@@ -58,20 +58,19 @@ def standardize(X):
 if __name__ == "__main__":
     X,y = load_data("CS205_small_Data__22.txt")
     X = standardize(X)
-    print("Data loaded and standardized.")
-    print(f"X shape: {X.shape}, y shape: {y.shape}")
-    print(f"First 5 labels: {y[:5]}")
-    print(f"First 5 samples: {X[:5]}")
+    n = X.shape[0]
+    idx = np.random.permutation(n)
+    split_index = int(0.8 * n)  # 80% for training, 20% for testing
+    X_train, X_test = X[idx[:split_index]], X[idx[split_index:]]
+    y_train, y_test = y[idx[:split_index]], y[idx[split_index:]]
 
     # Create and fit the KNN model
     knn = KNN(k=3)  # You can change k to any value you want
-    knn.fit(X, y)
+    knn.fit(X_train, y_train)
     # Predict on the training data (for demonstration purposes)
-    predictions = knn.predict(X)
+    predictions = knn.predict(X_test)
     print("Predictions on training data:")
     print(predictions[:10])  # Show first 10 predictions
     # Check accuracy on training data
-    accuracy = np.mean(predictions == y)
+    accuracy = np.mean(predictions == y_test)
     print(f"Training accuracy: {accuracy * 100:.2f}%")
-
-    
