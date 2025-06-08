@@ -2,6 +2,8 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split, cross_val_score,LeaveOneOut
 from sklearn.neighbors import KNeighborsClassifier
+import matplotlib.pyplot as plt
+import time
 import sys, os
 
 if os.name == 'nt':
@@ -36,6 +38,7 @@ def forward_selection(X, y, k):
     prev_accuracy = 0.0
     best_accuracy = 0.0
     best_features = []
+    history = []
 
     while True:
         canididate_features = []
@@ -62,6 +65,7 @@ def forward_selection(X, y, k):
         selected_features.append(cureent_best_feature)
         select_str = ",".join(str(i+1) for i in selected_features)
 
+        history.append((selected_features.copy(), current_best_accuracy*100))
         if current_best_accuracy < prev_accuracy:
             print()
             print(f"Best accuracy did not improve from {prev_accuracy*100:.2f}%")
@@ -83,7 +87,7 @@ def forward_selection(X, y, k):
     best_str = ",".join(str(i+1) for i in best_features)
     print()
     print(f"Best feature set: {{{best_str}}} with accuracy {best_accuracy*100:.2f}%\n")
-    return best_features    
+    return best_features, history    
 
 def backward_elimination(X, y, k):
     n_features = X.shape[1]
@@ -104,6 +108,8 @@ def backward_elimination(X, y, k):
     prev_accuracy = baseline_acc
     best_accuracy = baseline_acc
     best_features = selected_features.copy()
+
+    history = []
 
     while len(selected_features) > 1:
         candidate_features = []
@@ -138,6 +144,7 @@ def backward_elimination(X, y, k):
         print(f"Selected feature(s): {{{select_str}}} "
               f"with accuracy {accuracy*100:.2f}%\n")
 
+        history.append((selected_features.copy(), accuracy * 100))
         prev_accuracy = accuracy
         if accuracy > best_accuracy:
             best_accuracy = accuracy
@@ -150,8 +157,25 @@ def backward_elimination(X, y, k):
     best_str = ",".join(str(f+1) for f in best_features)
     print(f"\nBest feature set: {{{best_str}}} "
           f"with accuracy {best_accuracy*100:.2f}%\n")
-    return best_features
+    return best_features,history
 
+def graph_history(history, title="Feature Selection History"):
+
+    if not history:
+        print("No history to graph.")
+        return
+
+    features_count = [h[0][-1] if h[0] else None for h in history]
+    accuracies = [h[1] for h in history]
+
+    plt.figure(figsize=(10, 5))
+    plt.plot(features_count, accuracies, marker='o')
+    plt.title(title)
+    plt.xlabel('Number of Features Selected')
+    plt.ylabel('Accuracy (%)')
+    plt.xticks(features_count)
+    plt.grid()
+    plt.show()
 
 if __name__ == "__main__":
     print("Welcome to KNN Feature Selection!")
@@ -169,11 +193,21 @@ if __name__ == "__main__":
     print("This Dataset has {} features and {} samples.".format(X.shape[1], X.shape[0]))
     print()
     print(" You can press 'q' at any time to quit the search early. Search ends after the completion of current iteration.\n")
+    start_time = time.time()
     if algo == 1:
-        selected_features = forward_selection(X, y, k)
+        
+        selected_features,history = forward_selection(X, y, k)
         print()
         print(f"Final selected features (0-based indexing): {selected_features}")
+        end_time = time.time()
+        graph_history(history, title="Forward Selection History")  # Graph the history for forward selection
+
     elif algo == 2:
-        selected_features = backward_elimination(X, y, k)
+        selected_features,history = backward_elimination(X, y, k)
         print()
         print(f"Final selected features (0-based indexing): {selected_features}")
+        end_time = time.time()
+        graph_history(history, title="Backward Elimination History")
+
+    print(f"Total time taken for search: {end_time - start_time:.2f} seconds")
+    print("Thank you for using KNN Feature Selection!")
