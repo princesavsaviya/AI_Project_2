@@ -182,13 +182,28 @@ def graph_history(history, title="Feature Selection History"):
         labels.append(lbl)
         accuracies.append(acc)
 
+    n = len(labels)
+    idx_max = accuracies.index(max(accuracies))
+
+    # decide which ticks to label
+    show_idxs = set(range(0, n, 5)) | {0, n-1, idx_max}
+
+    # build tick_labels: only show labels at our chosen indices
+    tick_labels = [
+        labels[i] if i in show_idxs else ""
+        for i in range(n)
+    ]
+
+
     plt.figure(figsize=(10, 5))
-    plt.plot(accuracies, marker='o')
-    plt.xticks(range(len(labels)), labels, rotation=45, ha='right')
+    plt.bar(range(len(labels)), accuracies)
+    plt.xticks(range(len(labels)), tick_labels, rotation=45, ha='right')
     plt.title(title)
-    plt.xlabel('Number of Features Selected')
-    plt.ylabel('Accuracy (%)')
-    plt.grid()
+    plt.xlabel(f"Current Feature Set:  {title}")
+    plt.ylabel("Accuracy (%)")
+    plt.ylim(0, 100)
+    plt.grid(axis="y", linestyle="--", alpha=0.5)
+    plt.tight_layout()
     plt.show()
 
 if __name__ == "__main__":
@@ -214,14 +229,14 @@ if __name__ == "__main__":
         print()
         print(f"Final selected features (0-based indexing): {selected_features}")
         end_time = time.time()
-        graph_history(history, title="Forward Selection History")  # Graph the history for forward selection
+        graph_history(history, title="Forward Selection")  # Graph the history for forward selection
 
     elif algo == 2:
         selected_features,history = backward_elimination(X, y, k)
         print()
         print(f"Final selected features (0-based indexing): {selected_features}")
         end_time = time.time()
-        graph_history(history, title="Backward Elimination History")
+        graph_history(history, title="Backward Elimination")
 
-    print(f"Total time taken for search: {end_time - start_time:.2f} seconds")
+    print(f"Total time taken for search: {((end_time - start_time)/60):.2f} minutes\n")
     print("Thank you for using KNN Feature Selection!")
