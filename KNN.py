@@ -165,15 +165,29 @@ def graph_history(history, title="Feature Selection History"):
         print("No history to graph.")
         return
 
-    features_count = [h[0][-1] if h[0] else None for h in history]
-    accuracies = [h[1] for h in history]
+    max_len = max(len(feats) for feats, _ in history)
+
+    labels = []
+    accuracies = []
+    for feats, acc in history:
+        # Build label
+        if not feats:
+            lbl = "{}"
+        elif len(feats) == max_len:
+            lbl = "{All Features}"
+        elif len(feats) <=3:
+            lbl = "{" + ",".join(str(f) for f in feats) + "}"
+        else:
+            lbl = "{" + ",".join(str(f) for f in feats[:3]) + ",...}"
+        labels.append(lbl)
+        accuracies.append(acc)
 
     plt.figure(figsize=(10, 5))
-    plt.plot(features_count, accuracies, marker='o')
+    plt.plot(accuracies, marker='o')
+    plt.xticks(range(len(labels)), labels, rotation=45, ha='right')
     plt.title(title)
     plt.xlabel('Number of Features Selected')
     plt.ylabel('Accuracy (%)')
-    plt.xticks(features_count)
     plt.grid()
     plt.show()
 
