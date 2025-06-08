@@ -5,6 +5,7 @@ from sklearn.neighbors import KNeighborsClassifier
 
 def forward_selection(X, y, k):
     n_features = X.shape[1]
+
     knn = KNeighborsClassifier(n_neighbors=k)
     baseline_accuracy = cross_val_score(knn, X, y, cv=LeaveOneOut(),n_jobs=-1,scoring='accuracy').mean()
 
@@ -13,6 +14,8 @@ def forward_selection(X, y, k):
     print("Starting forward selection...")
     selected_features = []
     prev_accuracy = 0.0
+    best_accuracy = 0.0
+    best_features = []
 
     while True:
         canididate_features = []
@@ -35,18 +38,28 @@ def forward_selection(X, y, k):
             print("No more candidate features to add.")
             break
         
-        best_feature, best_accuracy = max(canididate_features, key=lambda x: x[1])
-        selected_features.append(best_feature)
+        cureent_best_feature, current_best_accuracy = max(canididate_features, key=lambda x: x[1])
+        selected_features.append(cureent_best_feature)
         select_str = ",".join(str(i+1) for i in selected_features)
 
-        if best_accuracy < prev_accuracy:
-            print(f"Stopping forward selection. Best accuracy did not improve from {prev_accuracy*100:.2f}%")
+        if current_best_accuracy < prev_accuracy:
+            print()
+            print(f"Best accuracy did not improve from {prev_accuracy*100:.2f}%")
             print("Continue to search for best feature set.")
 
-        print(f"Selected feature(s): {{{select_str}}} with accuracy {best_accuracy*100:.2f}%\n")
+        print()
+        print(f"Selected feature(s): {{{select_str}}} with accuracy {current_best_accuracy*100:.2f}%\n")
+
+        if current_best_accuracy > best_accuracy:
+            best_accuracy = current_best_accuracy
+            best_features = selected_features.copy()
+
         prev_accuracy = best_accuracy
 
-    return selected_features    
+    best_str = ",".join(str(i+1) for i in best_features)
+    print()
+    print(f"Best feature set: {{{best_str}}} with accuracy {best_accuracy*100:.2f}%\n")
+    return best_features    
 
 data = np.loadtxt("CS205_small_Data__22.txt", dtype=np.float64, ndmin=2)
 y = data[:, 0].astype(np.int64)
@@ -56,4 +69,5 @@ scaler = StandardScaler()
 X = scaler.fit_transform(X)
 
 selected_features = forward_selection(X, y, k=3)
+print()
 print(f"Final selected features (0-based indexing): {selected_features}")
