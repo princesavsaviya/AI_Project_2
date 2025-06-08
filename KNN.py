@@ -222,6 +222,10 @@ if __name__ == "__main__":
     print("This Dataset has {} features and {} samples.".format(X.shape[1], X.shape[0]))
     print()
     print(" You can press 'q' at any time to quit the search early. Search ends after the completion of current iteration.\n")
+
+    default_rate = np.bincount(y).max() / len(y)
+    print("Default classification rate (most common class): {:.2f} ({:.2f}%)\n".format(
+        np.bincount(y).argmax(), default_rate * 100))
     start_time = time.time()
     if algo == 1:
         
